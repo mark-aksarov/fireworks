@@ -16,6 +16,12 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 const canvas = document.querySelector("canvas.webgl");
 
+const isMobile =
+  window.matchMedia("(max-width: 768px)").matches ||
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+const isSmallMobile = window.matchMedia("(max-width: 480px)").matches;
+
 /**
  * =========================================================
  * SCENE
@@ -37,7 +43,7 @@ const camera = new THREE.PerspectiveCamera(
   100,
 );
 
-camera.position.set(0, 0, 15);
+camera.position.set(0, 0, isMobile ? 16 : 15);
 
 scene.add(camera);
 
@@ -50,6 +56,10 @@ scene.add(camera);
 const controls = new OrbitControls(camera, canvas);
 
 controls.enableDamping = true;
+controls.enablePan = false;
+controls.enableZoom = !isSmallMobile;
+
+canvas.style.touchAction = "none";
 
 /**
  * =========================================================
@@ -62,7 +72,9 @@ const renderer = new THREE.WebGLRenderer({
   canvas,
 });
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const maxPixelRatio = isMobile ? (isSmallMobile ? 1 : 1.5) : 2;
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -175,9 +187,9 @@ const settings = {
    * -------------------------------------------------------
    */
 
-  dropCount: 14,
+  dropCount: isMobile ? (isSmallMobile ? 10 : 12) : 14,
 
-  sliceCount: 15,
+  sliceCount: isMobile ? (isSmallMobile ? 10 : 12) : 15,
 
   /**
    * -------------------------------------------------------
@@ -203,7 +215,7 @@ const settings = {
    * -------------------------------------------------------
    */
 
-  particleCount: 1400,
+  particleCount: isMobile ? (isSmallMobile ? 600 : 800) : 1400,
 
   particleSystemLength: 1.5,
 
@@ -211,7 +223,15 @@ const settings = {
 
   minTailThickness: 0.05,
 
-  particleSize: 70,
+  particleSize: isMobile ? 60 : 70,
+
+  /**
+   * -------------------------------------------------------
+   * Mobile geometry quality
+   * -------------------------------------------------------
+   */
+
+  latheSegments: isMobile ? (isSmallMobile ? 32 : 40) : 100,
 
   /**
    * -------------------------------------------------------
@@ -323,7 +343,7 @@ function createDrop(glowColor) {
    */
 
   {
-    const geometry = new THREE.LatheGeometry(points1, 100);
+    const geometry = new THREE.LatheGeometry(points1, settings.latheSegments);
 
     const material = new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
@@ -377,7 +397,7 @@ function createDrop(glowColor) {
    */
 
   {
-    const geometry = new THREE.LatheGeometry(points2, 100);
+    const geometry = new THREE.LatheGeometry(points2, settings.latheSegments);
 
     const material = new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
@@ -605,7 +625,9 @@ function clearFirework() {
 
       if (object.material) {
         if (Array.isArray(object.material)) {
-          object.material.forEach((material) => material.dispose());
+          object.material.forEach((material) => {
+            material.dispose();
+          });
         } else {
           object.material.dispose();
         }
@@ -820,9 +842,9 @@ function bindRange(
 }
 
 /**
- * ---------------------------------------------------------
+ * =========================================================
  * ANIMATION SETTINGS
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 bindRange("fireworksDuration", null, (value) => `${Number(value).toFixed(2)}s`);
@@ -844,9 +866,9 @@ bindRange("fadeOutDuration", null, (value) => `${Number(value).toFixed(2)}s`);
 bindRange("maxDropDelay", null, (value) => `${Number(value).toFixed(2)}s`);
 
 /**
- * ---------------------------------------------------------
+ * =========================================================
  * SHAPE SETTINGS
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 bindRange("minRadius", null, (value) => Number(value).toFixed(2));
@@ -914,7 +936,7 @@ window.addEventListener("resize", () => {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
 });
 
 /**
