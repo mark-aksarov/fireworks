@@ -150,23 +150,36 @@ const glowColors = [
 
 const settings = {
   /**
+   * -------------------------------------------------------
    * Animation
+   * -------------------------------------------------------
    */
 
+  // Полная продолжительность фейерверка
   fireworksDuration: 1.4,
 
+  // Время появления из полной прозрачности
+  fadeInDuration: 0.2,
+
+  // Скорость роста хвоста
   tailGrowthDuration: 0.2,
 
+  // Степень нелинейности роста хвоста
   tailGrowthPower: 2.5,
 
+  // За сколько секунд до конца начинается затухание
   fadeOutBeforeEnd: 0.8,
 
+  // Продолжительность затухания
   fadeOutDuration: 0.6,
 
+  // Максимальная случайная задержка отдельных капель
   maxDropDelay: 0,
 
   /**
+   * -------------------------------------------------------
    * Firework shape
+   * -------------------------------------------------------
    */
 
   dropCount: 14,
@@ -174,7 +187,9 @@ const settings = {
   sliceCount: 15,
 
   /**
+   * -------------------------------------------------------
    * Ray length
+   * -------------------------------------------------------
    */
 
   minRadius: 2.7,
@@ -182,13 +197,17 @@ const settings = {
   maxRadius: 3.3,
 
   /**
+   * -------------------------------------------------------
    * Random vertical/depth offset
+   * -------------------------------------------------------
    */
 
   targetOffset: 0.35,
 
   /**
+   * -------------------------------------------------------
    * Particles
+   * -------------------------------------------------------
    */
 
   particleCount: 1400,
@@ -202,7 +221,9 @@ const settings = {
   particleSize: 70,
 
   /**
+   * -------------------------------------------------------
    * Outer / inner glow
+   * -------------------------------------------------------
    */
 
   outerGlowStrength: 6,
@@ -218,7 +239,9 @@ const settings = {
   innerStartTailOpacity: 0.5,
 
   /**
+   * -------------------------------------------------------
    * Camera
+   * -------------------------------------------------------
    */
 
   cameraFov: 40,
@@ -272,7 +295,6 @@ function getRandomTarget() {
   return new THREE.Vector3(
     radius,
     (Math.random() - 0.5) * settings.targetOffset,
-
     (Math.random() - 0.5) * settings.targetOffset,
   );
 }
@@ -327,7 +349,7 @@ function createDrop(glowColor) {
         },
 
         uOpacity: {
-          value: settings.outerOpacity,
+          value: 0,
         },
 
         uDropLength: {
@@ -381,7 +403,7 @@ function createDrop(glowColor) {
         },
 
         uOpacity: {
-          value: settings.innerOpacity,
+          value: 0,
         },
 
         uDropLength: {
@@ -464,7 +486,7 @@ function createDrop(glowColor) {
         },
 
         uOpacity: {
-          value: 1,
+          value: 0,
         },
 
         uParticleSystemLength: {
@@ -620,16 +642,47 @@ function resetDrop(drop) {
     if (object.material instanceof THREE.ShaderMaterial) {
       const uniforms = object.material.uniforms;
 
+      /**
+       * -----------------------------------------------------
+       * COLOR
+       * -----------------------------------------------------
+       */
+
       if (uniforms?.uGlowColor) {
         uniforms.uGlowColor.value = newColor;
       }
+
+      /**
+       * -----------------------------------------------------
+       * TAIL
+       * -----------------------------------------------------
+       */
 
       if (uniforms?.uTailGrowth) {
         uniforms.uTailGrowth.value = 0;
       }
 
+      /**
+       * -----------------------------------------------------
+       * TIME
+       * -----------------------------------------------------
+       */
+
+      if (uniforms?.uTime) {
+        uniforms.uTime.value = 0;
+      }
+
+      /**
+       * -----------------------------------------------------
+       * OPACITY
+       *
+       * ВАЖНО:
+       * Каждый новый цикл начинается полностью прозрачным.
+       * -----------------------------------------------------
+       */
+
       if (uniforms?.uOpacity) {
-        uniforms.uOpacity.value = object.material.userData.originalOpacity;
+        uniforms.uOpacity.value = 0;
       }
     }
   });
@@ -678,9 +731,9 @@ panelToggle?.addEventListener("click", () => {
 });
 
 /**
- * ---------------------------------------------------------
+ * =========================================================
  * INPUT HELPERS
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 function bindRange(
@@ -716,6 +769,8 @@ function bindRange(
  */
 
 bindRange("fireworksDuration", null, (value) => `${Number(value).toFixed(2)}s`);
+
+bindRange("fadeInDuration", null, (value) => `${Number(value).toFixed(2)}s`);
 
 bindRange(
   "tailGrowthDuration",
@@ -771,6 +826,10 @@ const cameraFovValue = document.querySelector('[data-value="cameraFov"]');
 
 if (cameraFovInput) {
   cameraFovInput.value = settings.cameraFov;
+
+  if (cameraFovValue) {
+    cameraFovValue.textContent = `${settings.cameraFov}°`;
+  }
 
   cameraFovInput.addEventListener("input", () => {
     settings.cameraFov = Number(cameraFovInput.value);
@@ -838,6 +897,12 @@ const tick = () => {
     settings.fireworksDuration - fadeStart,
   );
 
+  /**
+   * -------------------------------------------------------
+   * DROPS
+   * -------------------------------------------------------
+   */
+
   for (const drop of animatedDrops) {
     const firework = drop.userData.firework;
 
@@ -885,11 +950,27 @@ const tick = () => {
 
     /**
      * -----------------------------------------------------
-     * FADE
+     * FADE IN
      * -----------------------------------------------------
      */
 
     let opacity = 1;
+
+    if (settings.fadeInDuration > 0 && cycleTime < settings.fadeInDuration) {
+      const fadeInProgress = THREE.MathUtils.clamp(
+        cycleTime / settings.fadeInDuration,
+        0,
+        1,
+      );
+
+      opacity = easeOutCubic(fadeInProgress);
+    }
+
+    /**
+     * -----------------------------------------------------
+     * FADE OUT
+     * -----------------------------------------------------
+     */
 
     if (cycleTime > fadeStart && actualFadeDuration > 0) {
       const fadeProgress = THREE.MathUtils.clamp(
@@ -898,8 +979,14 @@ const tick = () => {
         1,
       );
 
-      opacity = 1 - fadeProgress;
+      opacity *= 1 - fadeProgress;
     }
+
+    /**
+     * -----------------------------------------------------
+     * COMPLETE TRANSPARENCY
+     * -----------------------------------------------------
+     */
 
     if (cycleTime >= settings.fireworksDuration) {
       opacity = 0;
@@ -958,6 +1045,20 @@ const tick = () => {
         }
       }
     });
+  }
+
+  /**
+   * -------------------------------------------------------
+   * AUTOMATIC RESTART
+   * -------------------------------------------------------
+   *
+   * Фейерверк автоматически перезапускается,
+   * когда полностью заканчивается.
+   * -------------------------------------------------------
+   */
+
+  if (fireworksTime >= settings.fireworksDuration) {
+    restartFireworks();
   }
 
   /**
