@@ -50,7 +50,7 @@ body {
   right: 20px;
 
   width: 310px;
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
 
   z-index: 10;
 
@@ -166,7 +166,7 @@ body {
    ========================================================= */
 
 .controls-content {
-  max-height: calc(100vh - 92px);
+  max-height: calc(100dvh - 92px);
 
   overflow-y: auto;
 
@@ -429,7 +429,7 @@ input[type="range"]::-moz-range-thumb {
 
     width: 280px;
 
-    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
   }
 
   .controls-panel.is-collapsed {
@@ -437,6 +437,6 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .controls-content {
-    max-height: calc(100vh - 72px);
+    max-height: calc(100dvh - 72px);
   }
 }
