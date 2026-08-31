@@ -1,30 +1,83 @@
-import * as THREE from 'three'
-import dropVertexShader from './shaders/drop/vertex.glsl';
-import dropFragmentShader from './shaders/drop/fragment.glsl';
-import particlesVertexShader from './shaders/particles/vertex.glsl';
-import particlesFragmentShader from './shaders/particles/fragment.glsl';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import * as THREE from "three";
 
-const canvas = document.querySelector('canvas.webgl')
+import dropVertexShader from "./shaders/drop/vertex.glsl";
+import dropFragmentShader from "./shaders/drop/fragment.glsl";
+
+import particlesVertexShader from "./shaders/particles/vertex.glsl";
+import particlesFragmentShader from "./shaders/particles/fragment.glsl";
+
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
+/**
+ * =========================================================
+ * CANVAS
+ * =========================================================
+ */
+
+const canvas = document.querySelector("canvas.webgl");
+
+/**
+ * =========================================================
+ * SCENE
+ * =========================================================
+ */
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 0, 7);
+/**
+ * =========================================================
+ * CAMERA
+ * =========================================================
+ */
+
+const camera = new THREE.PerspectiveCamera(
+  40,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100,
+);
+
+camera.position.set(0, 0, 15);
+
 scene.add(camera);
+
+/**
+ * =========================================================
+ * CONTROLS
+ * =========================================================
+ */
+
 const controls = new OrbitControls(camera, canvas);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
-renderer.setPixelRatio(window.devicePixelRatio);
+controls.enableDamping = true;
+
+/**
+ * =========================================================
+ * RENDERER
+ * =========================================================
+ */
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  canvas,
+});
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
 renderer.setSize(window.innerWidth, window.innerHeight);
+
 renderer.toneMapping = THREE.ReinhardToneMapping;
+
 renderer.toneMappingExposure = 1;
 
 /**
-* Points
-*/
+ * =========================================================
+ * CURVE 1
+ * =========================================================
+ */
+
 const curve1 = new THREE.SplineCurve([
-  new THREE.Vector2(0.000000, 0.000000),
+  new THREE.Vector2(0.0, 0.0),
   new THREE.Vector2(0.047439, 0.008781),
   new THREE.Vector2(0.083663, 0.036272),
   new THREE.Vector2(0.105215, 0.080331),
@@ -32,240 +85,898 @@ const curve1 = new THREE.SplineCurve([
   new THREE.Vector2(0.115893, 0.169723),
   new THREE.Vector2(0.114094, 0.226568),
   new THREE.Vector2(0.109559, 0.280991),
-  new THREE.Vector2(0.102370, 0.344970),
-  new THREE.Vector2(0.092311, 0.424740),
+  new THREE.Vector2(0.10237, 0.34497),
+  new THREE.Vector2(0.092311, 0.42474),
   new THREE.Vector2(0.080957, 0.514696),
-  new THREE.Vector2(0.070820, 0.594478),
+  new THREE.Vector2(0.07082, 0.594478),
   new THREE.Vector2(0.064582, 0.662809),
   new THREE.Vector2(0.054219, 0.788387),
   new THREE.Vector2(0.045788, 0.890215),
   new THREE.Vector2(0.035777, 1.016548),
   new THREE.Vector2(0.017421, 1.161712),
-  new THREE.Vector2(0.000000, 1.188697)
+  new THREE.Vector2(0.0, 1.188697),
 ]);
 
+/**
+ * =========================================================
+ * CURVE 2
+ * =========================================================
+ */
+
 const curve2 = new THREE.SplineCurve([
-  new THREE.Vector2(0.00000000, 0.05249219),
+  new THREE.Vector2(0.0, 0.05249219),
   new THREE.Vector2(0.02353037, 0.05557644),
   new THREE.Vector2(0.04733661, 0.07088265),
-  new THREE.Vector2(0.06289341, 0.09870860),
-  new THREE.Vector2(0.07006410, 0.13031600),
-  new THREE.Vector2(0.07257684, 0.16152610),
+  new THREE.Vector2(0.06289341, 0.0987086),
+  new THREE.Vector2(0.0700641, 0.130316),
+  new THREE.Vector2(0.07257684, 0.1615261),
   new THREE.Vector2(0.07244543, 0.19605456),
   new THREE.Vector2(0.07011111, 0.23376948),
   new THREE.Vector2(0.06502574, 0.28320913),
-  new THREE.Vector2(0.05755539, 0.34173070),
-  new THREE.Vector2(0.04716476, 0.41779440),
+  new THREE.Vector2(0.05755539, 0.3417307),
+  new THREE.Vector2(0.04716476, 0.4177944),
   new THREE.Vector2(0.03611469, 0.50519714),
   new THREE.Vector2(0.02592416, 0.59628838),
   new THREE.Vector2(0.01742113, 0.67885639),
-  new THREE.Vector2(0.0079270, 0.763),
-  new THREE.Vector2(0.00000000, 0.77643018)
+  new THREE.Vector2(0.007927, 0.763),
+  new THREE.Vector2(0.0, 0.77643018),
 ]);
 
 const slicePointCount = 100;
 
 const points1 = curve1.getPoints(slicePointCount);
+
 const points2 = curve2.getPoints(slicePointCount);
 
+/**
+ * =========================================================
+ * COLORS
+ * =========================================================
+ */
+
 const glowColors = [
-  new THREE.Color(0xD13EE6),
-  new THREE.Color(0x0000ff)
+  new THREE.Color(0xd13ee6),
+  new THREE.Color(0x0000ff),
+  new THREE.Color(0xff3366),
+  new THREE.Color(0x33ccff),
+  new THREE.Color(0xffffff),
 ];
 
-//Drop
+/**
+ * =========================================================
+ * SETTINGS
+ * =========================================================
+ */
+
+const settings = {
+  /**
+   * Animation
+   */
+
+  fireworksDuration: 1.4,
+
+  tailGrowthDuration: 0.2,
+
+  tailGrowthPower: 2.5,
+
+  fadeOutBeforeEnd: 0.8,
+
+  fadeOutDuration: 0.6,
+
+  maxDropDelay: 0,
+
+  /**
+   * Firework shape
+   */
+
+  dropCount: 14,
+
+  sliceCount: 15,
+
+  /**
+   * Ray length
+   */
+
+  minRadius: 2.7,
+
+  maxRadius: 3.3,
+
+  /**
+   * Random vertical/depth offset
+   */
+
+  targetOffset: 0.35,
+
+  /**
+   * Particles
+   */
+
+  particleCount: 1400,
+
+  particleSystemLength: 1.5,
+
+  tailThickness: 0.15,
+
+  minTailThickness: 0.05,
+
+  particleSize: 70,
+
+  /**
+   * Outer / inner glow
+   */
+
+  outerGlowStrength: 6,
+
+  innerGlowStrength: 4,
+
+  outerOpacity: 0.3,
+
+  innerOpacity: 1,
+
+  outerStartTailOpacity: 0.9,
+
+  innerStartTailOpacity: 0.5,
+
+  /**
+   * Camera
+   */
+
+  cameraFov: 40,
+};
+
+/**
+ * =========================================================
+ * CLOCK
+ * =========================================================
+ */
+
+const clock = new THREE.Clock();
+
+let fireworksStartTime = 0;
+
+/**
+ * =========================================================
+ * ANIMATED DROPS
+ * =========================================================
+ */
+
+const animatedDrops = [];
+
+/**
+ * =========================================================
+ * FIREWORK GROUP
+ * =========================================================
+ */
+
+let fireworksGroup = new THREE.Group();
+
+scene.add(fireworksGroup);
+
+/**
+ * =========================================================
+ * HELPERS
+ * =========================================================
+ */
+
+function getRandomGlowColor() {
+  return glowColors[Math.floor(Math.random() * glowColors.length)];
+}
+
+function getRandomTarget() {
+  const radius = THREE.MathUtils.lerp(
+    settings.minRadius,
+    settings.maxRadius,
+    Math.random(),
+  );
+
+  return new THREE.Vector3(
+    radius,
+    (Math.random() - 0.5) * settings.targetOffset,
+
+    (Math.random() - 0.5) * settings.targetOffset,
+  );
+}
+
+function easeOutCubic(value) {
+  return 1 - Math.pow(1 - value, 3);
+}
+
+/**
+ * =========================================================
+ * CREATE DROP
+ * =========================================================
+ */
+
 function createDrop(glowColor) {
-  const dropLength = Math.max(...points1.map(p => p.y)) - Math.min(...points1.map(p => p.y));
+  const dropLength =
+    Math.max(...points1.map((p) => p.y)) - Math.min(...points1.map((p) => p.y));
+
   const drop = new THREE.Object3D();
 
-  //Outer drop
+  /**
+   * -------------------------------------------------------
+   * OUTER DROP
+   * -------------------------------------------------------
+   */
+
   {
     const geometry = new THREE.LatheGeometry(points1, 100);
+
     const material = new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
+
       depthWrite: false,
+
       blending: THREE.AdditiveBlending,
+
       vertexShader: dropVertexShader,
+
       fragmentShader: dropFragmentShader,
+
       uniforms: {
         uGlowColor: {
-          value: glowColor
+          value: glowColor,
         },
+
         uGlowStrength: {
-          value: 6
+          value: settings.outerGlowStrength,
         },
+
         uStartTailOpacity: {
-          value: 0.9
+          value: settings.outerStartTailOpacity,
         },
+
         uOpacity: {
-          value: 0.3
+          value: settings.outerOpacity,
         },
+
         uDropLength: {
-          value: dropLength
-        }
-      }
+          value: dropLength,
+        },
+
+        uTailGrowth: {
+          value: 0,
+        },
+      },
     });
+
+    material.userData.originalOpacity = settings.outerOpacity;
+
     const outerDrop = new THREE.Mesh(geometry, material);
+
     drop.add(outerDrop);
   }
 
-  //Inner drop
+  /**
+   * -------------------------------------------------------
+   * INNER DROP
+   * -------------------------------------------------------
+   */
+
   {
     const geometry = new THREE.LatheGeometry(points2, 100);
+
     const material = new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
+
       depthWrite: false,
+
       blending: THREE.AdditiveBlending,
+
       vertexShader: dropVertexShader,
+
       fragmentShader: dropFragmentShader,
+
       uniforms: {
         uGlowColor: {
-          value: glowColor
+          value: glowColor,
         },
+
         uGlowStrength: {
-          value: 4
+          value: settings.innerGlowStrength,
         },
+
         uStartTailOpacity: {
-          value: 0.5
+          value: settings.innerStartTailOpacity,
         },
+
         uOpacity: {
-          value: 1
+          value: settings.innerOpacity,
         },
+
         uDropLength: {
-          value: dropLength
-        }
+          value: dropLength,
+        },
+
+        uTailGrowth: {
+          value: 0,
+        },
       },
     });
+
+    material.userData.originalOpacity = settings.innerOpacity;
+
     const innerDrop = new THREE.Mesh(geometry, material);
+
     drop.add(innerDrop);
   }
 
-  //Particles
+  /**
+   * -------------------------------------------------------
+   * PARTICLES
+   * -------------------------------------------------------
+   */
+
   {
-    const pointSize = 70;
-    const particleSystemLength = 1.5;
-    const minTailThickness = 0.05;
-    const tailThickness = 0.15;
-    const particles = 1400;
+    const particles = settings.particleCount;
 
     const positions = new Float32Array(particles * 3);
 
     for (let i = 0; i < particles; i++) {
       const normalizedIndex = THREE.MathUtils.inverseLerp(0, particles, i);
-      const maxThickness = (1 - normalizedIndex) * (tailThickness - minTailThickness) + minTailThickness;
+
+      const maxThickness =
+        (1 - normalizedIndex) *
+          (settings.tailThickness - settings.minTailThickness) +
+        settings.minTailThickness;
 
       const randomAngle = Math.random() * Math.PI * 2;
+
       const x = (Math.random() - 0.5) * maxThickness * Math.cos(randomAngle);
+
       const z = (Math.random() - 0.5) * maxThickness * Math.sin(randomAngle);
-      const y = Math.pow(normalizedIndex, 10) * particleSystemLength;
+
+      const y = Math.pow(normalizedIndex, 10) * settings.particleSystemLength;
 
       const particleIndex = i * 3;
+
       positions[particleIndex] = x;
+
       positions[particleIndex + 1] = y + 0.1;
+
       positions[particleIndex + 2] = z;
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
     const material = new THREE.ShaderMaterial({
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      vertexColors: true,
-      vertexShader: particlesVertexShader,
-      fragmentShader: particlesFragmentShader,
-      uniforms:
-      {
-        uTime: { value: 0 },
-        uSize: { value: pointSize },
-        uGlowColor: {
-          value: glowColor
-        },
-        uOpacity: {
-          value: 1
-        },
-        uParticleSystemLength: {
-          value: particleSystemLength
-        }
-      }
-    })
 
-    const mesh = new THREE.Points(geometry, material)
-    mesh.position.set(0, 0, 0);
-    drop.add(mesh)
+      blending: THREE.AdditiveBlending,
+
+      vertexShader: particlesVertexShader,
+
+      fragmentShader: particlesFragmentShader,
+
+      uniforms: {
+        uTime: {
+          value: 0,
+        },
+
+        uSize: {
+          value: settings.particleSize,
+        },
+
+        uGlowColor: {
+          value: glowColor,
+        },
+
+        uOpacity: {
+          value: 1,
+        },
+
+        uParticleSystemLength: {
+          value: settings.particleSystemLength,
+        },
+
+        uTailGrowth: {
+          value: 0,
+        },
+      },
+    });
+
+    material.userData.originalOpacity = 1;
+
+    const mesh = new THREE.Points(geometry, material);
+
+    drop.add(mesh);
   }
 
   return drop;
 }
 
-//Fireworks
-{
+/**
+ * =========================================================
+ * CREATE FIREWORK
+ * =========================================================
+ */
+
+function createFirework() {
   const slice = new THREE.Object3D();
 
-  const dropCount = 14;
-  for (let i = 1; i < dropCount; i++) {
-    const dropInner = createDrop(glowColors[Math.floor(Math.random() * 2)]);
-    dropInner.rotateZ(Math.PI / 2);
-    dropInner.position.setX(Math.random() / 5 + 3);
-    dropInner.position.setY((Math.random() - 0.5) / 5);
-    dropInner.position.setZ((Math.random() - 0.5) / 5);
+  /**
+   * -------------------------------------------------------
+   * DROPS
+   * -------------------------------------------------------
+   */
+
+  for (let i = 1; i < settings.dropCount; i++) {
+    const glowColor = getRandomGlowColor();
+
+    const drop = createDrop(glowColor);
+
+    drop.rotateZ(Math.PI / 2);
+
+    drop.position.set(0, 0, 0);
+
+    const target = getRandomTarget();
+
+    const delay = Math.random() * settings.maxDropDelay;
+
+    drop.userData.firework = {
+      start: new THREE.Vector3(0, 0, 0),
+
+      target,
+
+      delay,
+    };
 
     const dropWrapper = new THREE.Object3D();
-    dropWrapper.add(dropInner.clone());
-    dropWrapper.rotateZ((i - Math.random() / 3) * Math.PI / dropCount);
+
+    dropWrapper.add(drop);
+
+    dropWrapper.rotateZ(
+      ((i - Math.random() / 3) * Math.PI) / settings.dropCount,
+    );
+
     slice.add(dropWrapper);
   }
 
-  const sliceCount = 15;
-  for (let i = 0; i <= sliceCount; i++) {
+  /**
+   * -------------------------------------------------------
+   * SLICES
+   * -------------------------------------------------------
+   */
+
+  for (let i = 0; i <= settings.sliceCount; i++) {
     const sliceWrapper = new THREE.Object3D();
-    sliceWrapper.add(slice.clone());
-    sliceWrapper.rotateX((i - Math.random() / 3) * Math.PI * 2.0 / sliceCount);
-    scene.add(sliceWrapper);
+
+    const sliceClone = slice.clone(true);
+
+    sliceWrapper.add(sliceClone);
+
+    sliceWrapper.rotateX(
+      ((i - Math.random() / 3) * Math.PI * 2.0) / settings.sliceCount,
+    );
+
+    fireworksGroup.add(sliceWrapper);
+  }
+
+  /**
+   * -------------------------------------------------------
+   * FIND DROPS
+   * -------------------------------------------------------
+   */
+
+  fireworksGroup.traverse((object) => {
+    if (object.userData?.firework) {
+      animatedDrops.push(object);
+    }
+  });
+}
+
+/**
+ * =========================================================
+ * CLEAR FIREWORK
+ * =========================================================
+ */
+
+function clearFirework() {
+  animatedDrops.length = 0;
+
+  fireworksGroup.traverse((object) => {
+    if (object.isMesh || object.isPoints) {
+      object.geometry?.dispose();
+
+      if (object.material) {
+        if (Array.isArray(object.material)) {
+          object.material.forEach((material) => material.dispose());
+        } else {
+          object.material.dispose();
+        }
+      }
+    }
+  });
+
+  scene.remove(fireworksGroup);
+
+  fireworksGroup = new THREE.Group();
+
+  scene.add(fireworksGroup);
+}
+
+/**
+ * =========================================================
+ * RESET DROP
+ * =========================================================
+ */
+
+function resetDrop(drop) {
+  const firework = drop.userData.firework;
+
+  firework.target = getRandomTarget();
+
+  firework.start = new THREE.Vector3(0, 0, 0);
+
+  firework.delay = Math.random() * settings.maxDropDelay;
+
+  drop.position.set(0, 0, 0);
+
+  const newColor = getRandomGlowColor();
+
+  drop.traverse((object) => {
+    if (object.material instanceof THREE.ShaderMaterial) {
+      const uniforms = object.material.uniforms;
+
+      if (uniforms?.uGlowColor) {
+        uniforms.uGlowColor.value = newColor;
+      }
+
+      if (uniforms?.uTailGrowth) {
+        uniforms.uTailGrowth.value = 0;
+      }
+
+      if (uniforms?.uOpacity) {
+        uniforms.uOpacity.value = object.material.userData.originalOpacity;
+      }
+    }
+  });
+}
+
+/**
+ * =========================================================
+ * RESTART FIREWORK
+ * =========================================================
+ */
+
+function restartFireworks() {
+  fireworksStartTime = clock.getElapsedTime();
+
+  for (const drop of animatedDrops) {
+    resetDrop(drop);
   }
 }
 
 /**
- * Sizes
+ * =========================================================
+ * REBUILD GEOMETRY
+ * =========================================================
  */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight
+
+function rebuildFirework() {
+  clearFirework();
+
+  createFirework();
+
+  restartFireworks();
 }
-
-window.addEventListener('resize', () => {
-  sizes.width = window.innerWidth
-  sizes.height = window.innerHeight
-
-  renderer.setSize(sizes.width, sizes.height);
-
-  // Update sizes
-
-  // Update camera
-  camera.aspect = sizes.width / sizes.height
-  camera.updateProjectionMatrix()
-
-  // Update renderer
-  renderer.setSize(sizes.width, sizes.height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-})
 
 /**
- * Animate
+ * =========================================================
+ * GUI
+ * =========================================================
  */
-const clock = new THREE.Clock()
 
-const tick = () => {
-  const elapsedTime = clock.getElapsedTime()
+const panel = document.querySelector(".controls-panel");
 
-  // Update material
-  //material.uniforms.uTime.value = elapsedTime
+const panelToggle = document.querySelector(".controls-toggle");
 
-  // Render
-  renderer.render(scene, camera);
+panelToggle?.addEventListener("click", () => {
+  panel?.classList.toggle("is-collapsed");
+});
 
-  // Call tick again on the next frame
-  window.requestAnimationFrame(tick)
+/**
+ * ---------------------------------------------------------
+ * INPUT HELPERS
+ * ---------------------------------------------------------
+ */
+
+function bindRange(
+  name,
+  valueElement,
+  formatter = (value) => Number(value).toFixed(2),
+) {
+  const input = document.querySelector(`[data-setting="${name}"]`);
+
+  const value = document.querySelector(`[data-value="${name}"]`);
+
+  if (!input) return;
+
+  input.value = settings[name];
+
+  if (value) {
+    value.textContent = formatter(input.value);
+  }
+
+  input.addEventListener("input", () => {
+    settings[name] = Number(input.value);
+
+    if (value) {
+      value.textContent = formatter(input.value);
+    }
+  });
 }
 
-tick()
+/**
+ * ---------------------------------------------------------
+ * ANIMATION SETTINGS
+ * ---------------------------------------------------------
+ */
+
+bindRange("fireworksDuration", null, (value) => `${Number(value).toFixed(2)}s`);
+
+bindRange(
+  "tailGrowthDuration",
+  null,
+  (value) => `${Number(value).toFixed(2)}s`,
+);
+
+bindRange("tailGrowthPower", null, (value) => Number(value).toFixed(2));
+
+bindRange("fadeOutBeforeEnd", null, (value) => `${Number(value).toFixed(2)}s`);
+
+bindRange("fadeOutDuration", null, (value) => `${Number(value).toFixed(2)}s`);
+
+bindRange("maxDropDelay", null, (value) => `${Number(value).toFixed(2)}s`);
+
+/**
+ * ---------------------------------------------------------
+ * SHAPE SETTINGS
+ * ---------------------------------------------------------
+ */
+
+bindRange("minRadius", null, (value) => Number(value).toFixed(2));
+
+bindRange("maxRadius", null, (value) => Number(value).toFixed(2));
+
+bindRange("targetOffset", null, (value) => Number(value).toFixed(2));
+
+bindRange("particleSize", null, (value) => Number(value).toFixed(0));
+
+/**
+ * =========================================================
+ * BUTTONS
+ * =========================================================
+ */
+
+const restartButton = document.querySelector(".restart-firework");
+
+restartButton?.addEventListener("click", restartFireworks);
+
+const rebuildButton = document.querySelector(".apply-geometry");
+
+rebuildButton?.addEventListener("click", rebuildFirework);
+
+/**
+ * =========================================================
+ * CAMERA SETTINGS
+ * =========================================================
+ */
+
+const cameraFovInput = document.querySelector('[data-setting="cameraFov"]');
+
+const cameraFovValue = document.querySelector('[data-value="cameraFov"]');
+
+if (cameraFovInput) {
+  cameraFovInput.value = settings.cameraFov;
+
+  cameraFovInput.addEventListener("input", () => {
+    settings.cameraFov = Number(cameraFovInput.value);
+
+    camera.fov = settings.cameraFov;
+
+    camera.updateProjectionMatrix();
+
+    if (cameraFovValue) {
+      cameraFovValue.textContent = `${settings.cameraFov}°`;
+    }
+  });
+}
+
+/**
+ * =========================================================
+ * RESIZE
+ * =========================================================
+ */
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+/**
+ * =========================================================
+ * INITIAL FIREWORK
+ * =========================================================
+ */
+
+createFirework();
+
+fireworksStartTime = clock.getElapsedTime();
+
+/**
+ * =========================================================
+ * ANIMATION
+ * =========================================================
+ */
+
+const tick = () => {
+  const elapsedTime = clock.getElapsedTime();
+
+  const fireworksTime = elapsedTime - fireworksStartTime;
+
+  /**
+   * -------------------------------------------------------
+   * FADE SETTINGS
+   * -------------------------------------------------------
+   */
+
+  const fadeStart = Math.max(
+    0,
+    settings.fireworksDuration - settings.fadeOutBeforeEnd,
+  );
+
+  const actualFadeDuration = Math.min(
+    settings.fadeOutDuration,
+    settings.fireworksDuration - fadeStart,
+  );
+
+  for (const drop of animatedDrops) {
+    const firework = drop.userData.firework;
+
+    /**
+     * -----------------------------------------------------
+     * LOCAL TIME
+     * -----------------------------------------------------
+     */
+
+    let cycleTime = fireworksTime - firework.delay;
+
+    if (cycleTime < 0) {
+      cycleTime = 0;
+    }
+
+    /**
+     * -----------------------------------------------------
+     * MOVEMENT
+     * -----------------------------------------------------
+     */
+
+    const movementProgress = THREE.MathUtils.clamp(
+      cycleTime / settings.fireworksDuration,
+      0,
+      1,
+    );
+
+    const movementEase = easeOutCubic(movementProgress);
+
+    drop.position.lerpVectors(firework.start, firework.target, movementEase);
+
+    /**
+     * -----------------------------------------------------
+     * TAIL GROWTH
+     * -----------------------------------------------------
+     */
+
+    const linearTailProgress = THREE.MathUtils.clamp(
+      cycleTime / settings.tailGrowthDuration,
+      0,
+      1,
+    );
+
+    const tailGrowth = Math.pow(linearTailProgress, settings.tailGrowthPower);
+
+    /**
+     * -----------------------------------------------------
+     * FADE
+     * -----------------------------------------------------
+     */
+
+    let opacity = 1;
+
+    if (cycleTime > fadeStart && actualFadeDuration > 0) {
+      const fadeProgress = THREE.MathUtils.clamp(
+        (cycleTime - fadeStart) / actualFadeDuration,
+        0,
+        1,
+      );
+
+      opacity = 1 - fadeProgress;
+    }
+
+    if (cycleTime >= settings.fireworksDuration) {
+      opacity = 0;
+    }
+
+    /**
+     * -----------------------------------------------------
+     * UPDATE MATERIALS
+     * -----------------------------------------------------
+     */
+
+    drop.traverse((object) => {
+      if (object.material instanceof THREE.ShaderMaterial) {
+        const uniforms = object.material.uniforms;
+
+        /**
+         * Tail
+         */
+
+        if (uniforms?.uTailGrowth) {
+          uniforms.uTailGrowth.value = tailGrowth;
+        }
+
+        /**
+         * Time
+         */
+
+        if (uniforms?.uTime) {
+          uniforms.uTime.value = elapsedTime;
+        }
+
+        /**
+         * Opacity
+         */
+
+        if (uniforms?.uOpacity) {
+          const originalOpacity = object.material.userData.originalOpacity ?? 1;
+
+          uniforms.uOpacity.value = originalOpacity * opacity;
+        }
+
+        /**
+         * Dynamic particle size
+         */
+
+        if (uniforms?.uSize) {
+          uniforms.uSize.value = settings.particleSize;
+        }
+
+        /**
+         * Dynamic particle length
+         */
+
+        if (uniforms?.uParticleSystemLength) {
+          uniforms.uParticleSystemLength.value = settings.particleSystemLength;
+        }
+      }
+    });
+  }
+
+  /**
+   * -------------------------------------------------------
+   * CONTROLS
+   * -------------------------------------------------------
+   */
+
+  controls.update();
+
+  /**
+   * -------------------------------------------------------
+   * RENDER
+   * -------------------------------------------------------
+   */
+
+  renderer.render(scene, camera);
+
+  requestAnimationFrame(tick);
+};
+
+tick();
