@@ -155,25 +155,18 @@ const settings = {
    * -------------------------------------------------------
    */
 
-  // Полная продолжительность фейерверка
   fireworksDuration: 1.4,
 
-  // Время появления из полной прозрачности
   fadeInDuration: 0.2,
 
-  // Скорость роста хвоста
   tailGrowthDuration: 0.2,
 
-  // Степень нелинейности роста хвоста
   tailGrowthPower: 2.5,
 
-  // За сколько секунд до конца начинается затухание
   fadeOutBeforeEnd: 0.8,
 
-  // Продолжительность затухания
   fadeOutDuration: 0.6,
 
-  // Максимальная случайная задержка отдельных капель
   maxDropDelay: 0,
 
   /**
@@ -246,6 +239,14 @@ const settings = {
 
   cameraFov: 40,
 };
+
+/**
+ * =========================================================
+ * DEFAULT SETTINGS
+ * =========================================================
+ */
+
+const defaultSettings = { ...settings };
 
 /**
  * =========================================================
@@ -675,9 +676,6 @@ function resetDrop(drop) {
       /**
        * -----------------------------------------------------
        * OPACITY
-       *
-       * ВАЖНО:
-       * Каждый новый цикл начинается полностью прозрачным.
        * -----------------------------------------------------
        */
 
@@ -690,16 +688,75 @@ function resetDrop(drop) {
 
 /**
  * =========================================================
- * RESTART FIREWORK
+ * RESET FIREWORK CYCLE
  * =========================================================
  */
 
-function restartFireworks() {
+function resetFireworkCycle() {
   fireworksStartTime = clock.getElapsedTime();
 
   for (const drop of animatedDrops) {
     resetDrop(drop);
   }
+}
+
+/**
+ * =========================================================
+ * RESET SETTINGS
+ * =========================================================
+ */
+
+function resetSettings() {
+  Object.assign(settings, defaultSettings);
+
+  camera.fov = settings.cameraFov;
+
+  camera.updateProjectionMatrix();
+
+  document.querySelectorAll("[data-setting]").forEach((input) => {
+    const name = input.dataset.setting;
+
+    if (name in settings) {
+      input.value = settings[name];
+    }
+
+    const value = document.querySelector(`[data-value="${name}"]`);
+
+    if (!value) {
+      return;
+    }
+
+    switch (name) {
+      case "fireworksDuration":
+      case "fadeInDuration":
+      case "tailGrowthDuration":
+      case "fadeOutBeforeEnd":
+      case "fadeOutDuration":
+      case "maxDropDelay":
+        value.textContent = `${Number(settings[name]).toFixed(2)}s`;
+        break;
+
+      case "tailGrowthPower":
+      case "minRadius":
+      case "maxRadius":
+      case "targetOffset":
+        value.textContent = Number(settings[name]).toFixed(2);
+        break;
+
+      case "particleSize":
+        value.textContent = Number(settings[name]).toFixed(0);
+        break;
+
+      case "cameraFov":
+        value.textContent = `${settings[name]}°`;
+        break;
+
+      default:
+        value.textContent = settings[name];
+    }
+  });
+
+  rebuildFirework();
 }
 
 /**
@@ -713,7 +770,7 @@ function rebuildFirework() {
 
   createFirework();
 
-  restartFireworks();
+  resetFireworkCycle();
 }
 
 /**
@@ -806,9 +863,9 @@ bindRange("particleSize", null, (value) => Number(value).toFixed(0));
  * =========================================================
  */
 
-const restartButton = document.querySelector(".restart-firework");
+const resetButton = document.querySelector(".reset-firework");
 
-restartButton?.addEventListener("click", restartFireworks);
+resetButton?.addEventListener("click", resetSettings);
 
 const rebuildButton = document.querySelector(".apply-geometry");
 
@@ -1049,16 +1106,12 @@ const tick = () => {
 
   /**
    * -------------------------------------------------------
-   * AUTOMATIC RESTART
-   * -------------------------------------------------------
-   *
-   * Фейерверк автоматически перезапускается,
-   * когда полностью заканчивается.
+   * AUTOMATIC RESET
    * -------------------------------------------------------
    */
 
   if (fireworksTime >= settings.fireworksDuration) {
-    restartFireworks();
+    resetFireworkCycle();
   }
 
   /**
