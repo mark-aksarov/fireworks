@@ -58,7 +58,6 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.enableRotate = false;
-controls.enableZoom = !isSmallMobile;
 
 canvas.style.touchAction = "none";
 
