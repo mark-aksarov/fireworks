@@ -43,7 +43,7 @@ const camera = new THREE.PerspectiveCamera(
   100,
 );
 
-camera.position.set(0, 0, isMobile ? 16 : 15);
+camera.position.set(0, 0, 20);
 
 scene.add(camera);
 
@@ -180,7 +180,7 @@ const settings = {
 
   fadeOutDuration: 0.6,
 
-  maxDropDelay: 0,
+  maxDropDelay: 0.2,
 
   /**
    * -------------------------------------------------------
@@ -198,9 +198,9 @@ const settings = {
    * -------------------------------------------------------
    */
 
-  minRadius: 2.7,
+  minRadius: 2.0,
 
-  maxRadius: 3.3,
+  maxRadius: 6.0,
 
   /**
    * -------------------------------------------------------
@@ -208,7 +208,7 @@ const settings = {
    * -------------------------------------------------------
    */
 
-  targetOffset: 0.35,
+  targetOffset: 0.5,
 
   /**
    * -------------------------------------------------------
@@ -224,7 +224,7 @@ const settings = {
 
   minTailThickness: 0.05,
 
-  particleSize: isMobile ? 60 : 70,
+  particleSize: 35,
 
   /**
    * -------------------------------------------------------
@@ -948,7 +948,7 @@ window.addEventListener("resize", () => {
 
 createFirework();
 
-fireworksStartTime = clock.getElapsedTime();
+resetFireworkCycle();
 
 /**
  * =========================================================
