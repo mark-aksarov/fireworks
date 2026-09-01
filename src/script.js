@@ -43,7 +43,7 @@ const camera = new THREE.PerspectiveCamera(
   100,
 );
 
-camera.position.set(0, 0, 20);
+camera.position.set(0, 0, isMobile ? 30 : 20);
 
 scene.add(camera);
 
